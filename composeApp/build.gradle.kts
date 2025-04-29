@@ -31,6 +31,7 @@ kotlin {
             implementation(libs.exposed.core)
             implementation(libs.exposed.jdbc)
             implementation(libs.exposed.dao)
+            implementation(libs.exposed.migration)
             implementation(libs.exposed.kotlin.datetime)
             implementation(libs.sqlite)
             implementation(libs.material3.desktop)

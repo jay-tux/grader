@@ -1,5 +1,6 @@
 package com.jaytux.grader.data
 
+import MigrationUtils
 import org.jetbrains.exposed.sql.Database
 import org.jetbrains.exposed.sql.SchemaUtils
 import org.jetbrains.exposed.sql.transactions.transaction
@@ -17,15 +18,19 @@ object Database {
                 StudentToGroupEvaluation
             )
 
-            val addMissing = SchemaUtils.addMissingColumnsStatements(
+            val migrate = MigrationUtils.statementsRequiredForDatabaseMigration(
                 Courses, Editions, Groups,
                 Students, GroupStudents, EditionStudents,
                 GroupAssignments, SoloAssignments, GroupAssignmentCriteria, SoloAssignmentCriteria,
                 GroupFeedbacks, IndividualFeedbacks, SoloFeedbacks,
                 PeerEvaluations, PeerEvaluationContents, StudentToStudentEvaluation,
-                StudentToGroupEvaluation
+                StudentToGroupEvaluation,
+                withLogs = true
             )
-            addMissing.forEach { exec(it) }
+
+            println(" --- Migration --- ")
+            migrate.forEach { println(it); exec(it) }
+            println(" --- End migration --- ")
         }
         actual
     }
