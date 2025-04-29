@@ -731,7 +731,10 @@ class PeerEvaluationState(val evaluation: PeerEvaluation) {
     private fun Transaction.loadContents(): List<GroupEntry> {
         return evaluation.edition.groups.map { group ->
             val globalNotes = PeerEvaluationContents.selectAll()
-                .where { PeerEvaluationContents.groupId eq group.id }.firstOrNull()?.let {
+                .where {
+                    (PeerEvaluationContents.groupId eq group.id) and
+                            (PeerEvaluationContents.peerEvaluationId eq evaluation.id)
+                }.firstOrNull()?.let {
                     it[PeerEvaluationContents.content]
                 }
 
