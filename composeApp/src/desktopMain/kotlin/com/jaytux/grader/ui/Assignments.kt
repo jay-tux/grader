@@ -26,6 +26,7 @@ import com.jaytux.grader.viewmodel.SoloAssignmentState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import kotlinx.datetime.LocalDateTime
+import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 
 @Composable
 fun GroupAssignmentView(state: GroupAssignmentState) {
@@ -585,9 +586,21 @@ fun PeerEvaluationView(state: PeerEvaluationState) {
                 }
                 MeasuredLazyColumn(key = idx) {
                     measuredItem { HLine() }
-                    items(current.students) { (from, glob, map) ->
+                    items(current.students) { (from, role, glob, map) ->
                         Row(Modifier.height(cellSize)) {
-                            Text(from.name, Modifier.width(textLenMeasured.dp).align(Alignment.CenterVertically))
+                            Column(Modifier.width(textLenMeasured.dp).align(Alignment.CenterVertically)) {
+                                Text(from.name, Modifier.width(textLenMeasured.dp))
+                                role?.let { r ->
+                                    Row {
+                                        Spacer(Modifier.width(10.dp))
+                                        Text(
+                                            r,
+                                            style = MaterialTheme.typography.bodySmall,
+                                            fontStyle = FontStyle.Italic
+                                        )
+                                    }
+                                }
+                            }
                             LazyRow(state = horScroll) {
                                 item { VLine() }
                                 items(map) { (to, entry) ->

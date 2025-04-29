@@ -722,7 +722,7 @@ class SoloAssignmentState(val assignment: SoloAssignment) {
 
 class PeerEvaluationState(val evaluation: PeerEvaluation) {
     data class Student2StudentEntry(val grade: String, val feedback: String)
-    data class StudentEntry(val student: Student, val global: Student2StudentEntry?, val others: List<Pair<Student, Student2StudentEntry?>>)
+    data class StudentEntry(val student: Student, val role: String?, val global: Student2StudentEntry?, val others: List<Pair<Student, Student2StudentEntry?>>)
     data class GroupEntry(val group: Group, val content: String, val students: List<StudentEntry>)
     val editionCourse = transaction { evaluation.edition.course to evaluation.edition }
     private val _name = mutableStateOf(evaluation.name); val name = _name.immutable()
@@ -739,6 +739,9 @@ class PeerEvaluationState(val evaluation: PeerEvaluation) {
                 }
 
             val students = group.students.map { from ->
+                val role = GroupStudents.selectAll().where { (GroupStudents.studentId eq from.id) and (GroupStudents.groupId eq group.id) }.firstOrNull()?.let {
+                    it[GroupStudents.role]
+                }
                 val s2g = StudentToGroupEvaluation.selectAll().where {
                     (StudentToGroupEvaluation.peerEvaluationId eq evaluation.id) and
                             (StudentToGroupEvaluation.studentId eq from.id)
@@ -758,7 +761,7 @@ class PeerEvaluationState(val evaluation: PeerEvaluation) {
                     other to eval
                 }
 
-                StudentEntry(from, s2g, others)
+                StudentEntry(from, role, s2g, others)
             }
 
             GroupEntry(group, globalNotes ?: "", students)
@@ -767,7 +770,6 @@ class PeerEvaluationState(val evaluation: PeerEvaluation) {
 
     fun upsertGroupFeedback(group: Group, feedback: String) {
         transaction {
-            println("Upserting group-level notes for ${group.name} (${evaluation.name})")
             PeerEvaluationContents.upsert {
                 it[peerEvaluationId] = evaluation.id
                 it[groupId] = group.id
@@ -780,7 +782,6 @@ class PeerEvaluationState(val evaluation: PeerEvaluation) {
     fun upsertIndividualFeedback(from: Student, to: Student?, grade: String, feedback: String) {
         transaction {
             to?.let {
-                println("Upserting individual feedback for ${from.name} -> ${to.name} (${evaluation.name})")
                 StudentToStudentEvaluation.upsert {
                     it[peerEvaluationId] = evaluation.id
                     it[studentIdFrom] = from.id
@@ -793,10 +794,6 @@ class PeerEvaluationState(val evaluation: PeerEvaluation) {
                 it[studentId] = from.id
                 it[this.grade] = grade
                 it[this.note] = feedback
-            }
-
-            if(to == null) {
-                println("Upserting group-level feedback for ${from.name} ${from.id.value} (${evaluation.name} ${evaluation.id.value})")
             }
         }
         contents.refresh()
