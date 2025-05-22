@@ -521,6 +521,11 @@ fun PeerEvaluationView(state: PeerEvaluationState) {
     }
 
     Column(Modifier.padding(10.dp)) {
+        if (contents.isEmpty()) {
+            Text("No groups available for peer evaluation")
+            return@Column
+        }
+
         TabRow(idx) {
             contents.forEachIndexed { i, it ->
                 Tab(idx == i, { idx = i; editing = null }) { Text(it.group.name) }
@@ -528,14 +533,19 @@ fun PeerEvaluationView(state: PeerEvaluationState) {
         }
         Spacer(Modifier.height(10.dp))
 
+        val current = contents[idx]
+        if (current.students.isEmpty()) {
+            Text("This group has no students. Please add students to the group first.")
+            return@Column
+        }
+
         Row {
-            val current = contents[idx]
             val horScroll = rememberLazyListState()
             val style = LocalTextStyle.current
             val textLenMeasured = remember(state, idx) {
-                current.students.maxOf { (s, _) ->
+                current.students.maxOfOrNull { (s, _) ->
                     measure.measure(s.name, style).size.width
-                } + 10
+                }?.plus(10) ?: 100
             }
             val cellSize = 75.dp
 
