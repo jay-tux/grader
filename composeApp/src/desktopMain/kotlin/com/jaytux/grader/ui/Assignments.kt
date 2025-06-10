@@ -126,14 +126,15 @@ fun groupTaskWidget(
                     Row {
                         DateTimePicker(deadline, onSetDeadline)
                     }
-                    RichTextStyleRow(state = updTask)
-                    OutlinedRichTextEditor(
-                        state = updTask,
-                        modifier = Modifier.fillMaxWidth().weight(1f),
-                        singleLine = false,
-                        minLines = 5,
-                        label = { Text("Task") }
-                    )
+                    RichTextField(updTask, Modifier.fillMaxWidth().weight(1f)) { Text("Task") }
+//                    RichTextStyleRow(state = updTask)
+//                    OutlinedRichTextEditor(
+//                        state = updTask,
+//                        modifier = Modifier.fillMaxWidth().weight(1f),
+//                        singleLine = false,
+//                        minLines = 5,
+//                        label = { Text("Task") }
+//                    )
                     CancelSaveRow(
                         true,
                         { updTask.setMarkdown(taskMD) },
@@ -276,16 +277,20 @@ fun groupFeedbackPane(
     key: Any? = null
 ) {
     var grade by remember(globFeedback, key) { mutableStateOf(globFeedback?.grade ?: "") }
-    var feedback by remember(currentCriterion, criteria, criterionFeedback, key) { mutableStateOf(TextFieldValue(criterionFeedback?.feedback ?: "")) }
+    val feedback = rememberRichTextState()
+
+    LaunchedEffect(currentCriterion, criteria, criterionFeedback, key) {
+        feedback.setMarkdown(criterionFeedback?.feedback ?: "")
+    }
+
     Column(modifier) {
         Row {
             Text("Overall grade: ", Modifier.align(Alignment.CenterVertically))
             OutlinedTextField(grade, { grade = it }, Modifier.weight(0.2f))
             Spacer(Modifier.weight(0.6f))
             Button(
-                { onSetGrade(grade); onSetFeedback(feedback.text) },
-                Modifier.weight(0.2f).align(Alignment.CenterVertically),
-                enabled = grade.isNotBlank() || feedback.text.isNotBlank()
+                { onSetGrade(grade); onSetFeedback(feedback.toMarkdown()) },
+                Modifier.weight(0.2f).align(Alignment.CenterVertically)
             ) {
                 Text("Save")
             }
@@ -297,11 +302,7 @@ fun groupFeedbackPane(
             }
         }
         Spacer(Modifier.height(5.dp))
-        AutocompleteLineField(
-            feedback, { feedback = it }, Modifier.fillMaxWidth().weight(1f), { Text("Feedback") }
-        ) { filter ->
-            autofill.filter { x -> x.trim().startsWith(filter.trim()) }
-        }
+        RichTextField(feedback, Modifier.fillMaxWidth().weight(1f)) { Text("Feedback") }
     }
 }
 
@@ -480,16 +481,19 @@ fun soloFeedbackPane(
     key: Any? = null
 ) {
     var grade by remember(globFeedback, key) { mutableStateOf(globFeedback?.grade ?: "") }
-    var feedback by remember(currentCriterion, criteria, key) { mutableStateOf(TextFieldValue(criterionFeedback?.feedback ?: "")) }
+    val feedback = rememberRichTextState()
+
+    LaunchedEffect(currentCriterion, criteria, criterionFeedback, key) {
+        feedback.setMarkdown(criterionFeedback?.feedback ?: "")
+    }
     Column(modifier) {
         Row {
             Text("Overall grade: ", Modifier.align(Alignment.CenterVertically))
             OutlinedTextField(grade, { grade = it }, Modifier.weight(0.2f))
             Spacer(Modifier.weight(0.6f))
             Button(
-                { onSetGrade(grade); onSetFeedback(feedback.text) },
-                Modifier.weight(0.2f).align(Alignment.CenterVertically),
-                enabled = grade.isNotBlank() || feedback.text.isNotBlank()
+                { onSetGrade(grade); onSetFeedback(feedback.toMarkdown()) },
+                Modifier.weight(0.2f).align(Alignment.CenterVertically)
             ) {
                 Text("Save")
             }
@@ -501,11 +505,7 @@ fun soloFeedbackPane(
             }
         }
         Spacer(Modifier.height(5.dp))
-        AutocompleteLineField(
-            feedback, { feedback = it }, Modifier.fillMaxWidth().weight(1f), { Text("Feedback") }
-        ) { filter ->
-            autofill.filter { x -> x.trim().startsWith(filter.trim()) }
-        }
+        RichTextField(feedback, Modifier.fillMaxWidth().weight(1f)) { Text("Feedback") }
     }
 }
 

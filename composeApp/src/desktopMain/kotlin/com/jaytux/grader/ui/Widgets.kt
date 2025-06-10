@@ -34,6 +34,7 @@ import androidx.compose.ui.window.*
 import com.jaytux.grader.data.Course
 import com.jaytux.grader.data.Edition
 import com.jaytux.grader.viewmodel.PeerEvaluationState
+import com.mohamedrejeb.richeditor.model.RichTextState
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import kotlinx.datetime.*
@@ -211,7 +212,8 @@ fun PaneHeader(name: String, type: String, courseEdition: Pair<Course, Edition>)
 
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-fun AutocompleteLineField(
+fun AutocompleteLineField__(
+//    state: RichTextState,
     value: TextFieldValue, onValueChange: (TextFieldValue) -> Unit,
     modifier: Modifier = Modifier, label: @Composable (() -> Unit)? = null,
     onFilter: (String) -> List<String>
