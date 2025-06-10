@@ -60,6 +60,7 @@ class GroupAssignment(id: EntityID<UUID>) : Entity<UUID>(id) {
     var name by GroupAssignments.name
     var assignment by GroupAssignments.assignment
     var deadline by GroupAssignments.deadline
+    var globalCriterion by GroupAssignmentCriterion referencedOn GroupAssignments.globalCriterion
 
     val criteria by GroupAssignmentCriterion referrersOn GroupAssignmentCriteria.assignmentId
 }
@@ -98,6 +99,7 @@ class SoloAssignment(id: EntityID<UUID>) : Entity<UUID>(id) {
     var name by SoloAssignments.name
     var assignment by SoloAssignments.assignment
     var deadline by SoloAssignments.deadline
+    var globalCriterion by SoloAssignmentCriterion referencedOn SoloAssignments.globalCriterion
 
     val criteria by SoloAssignmentCriterion referrersOn SoloAssignmentCriteria.assignmentId
 }
