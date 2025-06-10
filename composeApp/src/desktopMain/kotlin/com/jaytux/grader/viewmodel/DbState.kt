@@ -373,12 +373,12 @@ class StudentState(val student: Student, edition: Edition) {
 
         val asGroup = (GroupAssignments innerJoin GroupAssignmentCriteria innerJoin GroupFeedbacks innerJoin Groups).selectAll().where {
             (GroupFeedbacks.groupId inList groupsForEdition.keys.toList()) and
-                    (GroupAssignmentCriteria.name eq "")
+                    (GroupAssignmentCriteria.id eq GroupAssignments.globalCriterion)
         }.map { it[GroupAssignments.id] to it }
 
         val asIndividual = (GroupAssignments innerJoin GroupAssignmentCriteria innerJoin IndividualFeedbacks innerJoin Groups).selectAll().where {
             (IndividualFeedbacks.studentId eq student.id) and
-                    (GroupAssignmentCriteria.name eq "")
+                    (GroupAssignmentCriteria.id eq GroupAssignments.globalCriterion)
         }.map { it[GroupAssignments.id] to it }
 
         val res = mutableMapOf<EntityID<UUID>, LocalGroupGrade>()
@@ -396,7 +396,7 @@ class StudentState(val student: Student, edition: Edition) {
             val og = res[gAId] ?: LocalGroupGrade(iRow[Groups.name], iRow[GroupAssignments.name], null, null)
             res[gAId] = og.copy(indivGrade = iRow[IndividualFeedbacks.grade])
         }
-
+        
         res.values.toList()
     }
 
@@ -644,7 +644,7 @@ class SoloAssignmentState(val assignment: SoloAssignment) {
         }.flatten().distinct().sorted()
     }
 
-    private fun Transaction.loadFeedback(): List<Pair<Student, FullFeedback>> {
+    private fun Transaction.loadFeedback(): List<Pair<Student, FullFeedback>> {3
         val allCrit = SoloAssignmentCriterion.find {
             SoloAssignmentCriteria.assignmentId eq assignment.id
         }.filter { it.id != assignment.globalCriterion.id }
