@@ -124,14 +124,6 @@ fun groupTaskWidget(
                         DateTimePicker(deadline, onSetDeadline)
                     }
                     RichTextField(updTask, Modifier.fillMaxWidth().weight(1f)) { Text("Task") }
-//                    RichTextStyleRow(state = updTask)
-//                    OutlinedRichTextEditor(
-//                        state = updTask,
-//                        modifier = Modifier.fillMaxWidth().weight(1f),
-//                        singleLine = false,
-//                        minLines = 5,
-//                        label = { Text("Task") }
-//                    )
                     CancelSaveRow(
                         true,
                         { updTask.setMarkdown(taskMD) },
