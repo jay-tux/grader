@@ -171,10 +171,14 @@ class EditionState(val edition: Edition) {
 
     fun newSoloAssignment(name: String) {
         transaction {
-            SoloAssignment.new {
+            val assign = SoloAssignment.new {
                 this.name = name; this.edition = this@EditionState.edition; assignment = ""; deadline = now()
                 this.number = nextIdx()
             }
+            val global = SoloAssignmentCriterion.new {
+                this.name = "_global"; this.description = "[Global] Meta-criterion for $name"; this.assignment = assign
+            }
+            assign.globalCriterion = global
             solo.refresh()
         }
     }
@@ -186,10 +190,14 @@ class EditionState(val edition: Edition) {
     }
     fun newGroupAssignment(name: String) {
         transaction {
-            GroupAssignment.new {
+            val assign = GroupAssignment.new {
                 this.name = name; this.edition = this@EditionState.edition; assignment = ""; deadline = now()
                 this.number = nextIdx()
             }
+            val global = GroupAssignmentCriterion.new {
+                this.name = "_global"; this.description = "[Global] Meta-criterion for $name"; this.assignment = assign
+            }
+            assign.globalCriterion = global
             groupAs.refresh()
         }
     }
@@ -494,7 +502,7 @@ class GroupAssignmentState(val assignment: GroupAssignment) {
     private fun Transaction.loadFeedback(): List<Pair<Group, LocalGFeedback>> {
         val allCrit = GroupAssignmentCriterion.find {
             GroupAssignmentCriteria.assignmentId eq assignment.id
-        }.filter { it.id != assignment.globalCriterion.id }
+        }//.filter { it.id != assignment.globalCriterion.id }
 
         return Group.find {
             (Groups.editionId eq assignment.edition.id)
@@ -525,11 +533,12 @@ class GroupAssignmentState(val assignment: GroupAssignment) {
                 val student = it.student
                 val role = it.role
 
-                val forSt = (IndividualFeedbacks innerJoin Groups innerJoin GroupStudents)
+                val forSt = (IndividualFeedbacks innerJoin Groups)
                     .selectAll().where {
                         (IndividualFeedbacks.assignmentId eq assignment.id) and
-                                (GroupStudents.studentId eq student.id) and (Groups.id eq group.id)
+                                (IndividualFeedbacks.studentId eq student.id) and (Groups.id eq group.id)
                     }.map { row ->
+                        val stdId = row[IndividualFeedbacks.studentId]
                         val crit = GroupAssignmentCriterion[row[IndividualFeedbacks.criterionId]]
                         val fdbk = row[IndividualFeedbacks.feedback]
                         val grade = row[IndividualFeedbacks.grade]
@@ -537,7 +546,7 @@ class GroupAssignmentState(val assignment: GroupAssignment) {
                         crit to FeedbackEntry(fdbk, grade)
                     }
 
-                val global = forSt.firstOrNull { it.first == assignment.globalCriterion.id }?.second
+                val global = forSt.firstOrNull { it.first.id == assignment.globalCriterion.id }?.second
                 val byCrit_ = forSt
                     .filter { it.first != assignment.globalCriterion.id }
                     .map { LocalCriterionFeedback(it.first, it.second) }
