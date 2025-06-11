@@ -64,14 +64,14 @@ fun EditionView(state: EditionState) = Row(Modifier.padding(0.dp)) {
                     { name, note, contact, add -> state.newStudent(name, contact, note, add) },
                     { students -> state.addToCourse(students) },
                     { s, name -> state.setStudentName(s, name) }
-                ) { s -> state.delete(s) }
+                ) { s, idx -> state.delete(s); if(id == idx) state.clearHistoryIndex() }
 
                 OpenPanel.Group -> GroupPanel(
                     course, edition, groups, id,
                     { state.navTo(it) },
                     { name -> state.newGroup(name) },
                     { g, name -> state.setGroupName(g, name) }
-                ) { g -> state.delete(g) }
+                ) { g, idx -> state.delete(g); if(id == idx) state.clearHistoryIndex() }
 
                 OpenPanel.Assignment -> AssignmentPanel(
                     course, edition, mergedAssignments, id,
@@ -79,7 +79,7 @@ fun EditionView(state: EditionState) = Row(Modifier.padding(0.dp)) {
                     { type, name -> state.newAssignment(type, name) },
                     { a, name -> state.setAssignmentTitle(a, name) },
                     { a1, a2 -> state.swapOrder(a1, a2) }
-                ) { a -> state.delete(a) }
+                ) { a, idx -> state.delete(a); if(id == idx) state.clearHistoryIndex() }
             }
         }
     }
@@ -133,7 +133,7 @@ fun StudentPanel(
     course: Course, edition: Edition, students: List<Student>, available: List<Student>,
     selected: Int, onSelect: (Int) -> Unit,
     onAdd: (name: String, note: String, contact: String, addToEdition: Boolean) -> Unit,
-    onImport: (List<Student>) -> Unit, onUpdate: (Student, String) -> Unit, onDelete: (Student) -> Unit
+    onImport: (List<Student>) -> Unit, onUpdate: (Student, String) -> Unit, onDelete: (Student, Int) -> Unit
 ) = Column(Modifier.padding(10.dp)) {
     var showDialog by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(-1) }
@@ -171,7 +171,7 @@ fun StudentPanel(
         ConfirmDeleteDialog(
             "a student",
             { deleting = -1 },
-            { onDelete(students[deleting]) }
+            { onDelete(students[deleting], deleting) }
         ) { Text(students[deleting].name) }
     }
 }
@@ -180,7 +180,7 @@ fun StudentPanel(
 fun GroupPanel(
     course: Course, edition: Edition, groups: List<Group>,
     selected: Int, onSelect: (Int) -> Unit,
-    onAdd: (String) -> Unit, onUpdate: (Group, String) -> Unit, onDelete: (Group) -> Unit
+    onAdd: (String) -> Unit, onUpdate: (Group, String) -> Unit, onDelete: (Group, Int) -> Unit
 ) = Column(Modifier.padding(10.dp)) {
     var showDialog by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(-1) }
@@ -218,7 +218,7 @@ fun GroupPanel(
         ConfirmDeleteDialog(
             "a group",
             { deleting = -1 },
-            { onDelete(groups[deleting]) }
+            { onDelete(groups[deleting], deleting) }
         ) { Text(groups[deleting].name) }
     }
 }
@@ -228,7 +228,7 @@ fun AssignmentPanel(
     course: Course, edition: Edition, assignments: List<Assignment>,
     selected: Int, onSelect: (Int) -> Unit,
     onAdd: (AssignmentType, String) -> Unit, onUpdate: (Assignment, String) -> Unit,
-    onSwapOrder: (Assignment, Assignment) -> Unit, onDelete: (Assignment) -> Unit
+    onSwapOrder: (Assignment, Assignment) -> Unit, onDelete: (Assignment, Int) -> Unit
 ) = Column(Modifier.padding(10.dp)) {
     var showDialog by remember { mutableStateOf(false) }
     var deleting by remember { mutableStateOf(-1) }
@@ -315,8 +315,8 @@ fun AssignmentPanel(
         ConfirmDeleteDialog(
             "an assignment",
             { deleting = -1 },
-            { onDelete(assignments[deleting]) }
-        ) { Text(assignments[deleting].name()) }
+            { onDelete(assignments[deleting], deleting) }
+        ) { if(deleting != -1) Text(assignments[deleting].name()) }
     }
 }
 

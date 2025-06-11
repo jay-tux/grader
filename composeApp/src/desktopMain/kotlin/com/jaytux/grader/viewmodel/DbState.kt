@@ -362,6 +362,10 @@ class EditionState(val edition: Edition) {
         while(temp.last().first == -1 && temp.size >= 2) temp = temp.dropLast(1)
         _history.value = temp
     }
+    fun clearHistoryIndex() {
+        val last = _history.value.lastOrNull() ?: return
+        _history.value = _history.value.filter { (i, panel) -> panel != last.second || i != last.first } + (-1 to last.second)
+    }
 }
 
 class StudentState(val student: Student, edition: Edition) {
