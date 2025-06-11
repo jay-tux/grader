@@ -263,9 +263,9 @@ fun groupFeedbackPane(
             }
         }
         TabRow(currentCriterion) {
-            Tab(currentCriterion == 0, { onSelectCriterion(0) }) { Text("General feedback", fontStyle = FontStyle.Italic) }
+            Tab(currentCriterion == 0, { onSelectCriterion(0) }) { Text("General feedback", Modifier.padding(5.dp), fontStyle = FontStyle.Italic) }
             criteria.forEachIndexed { i, c ->
-                Tab(currentCriterion == i + 1, { onSelectCriterion(i + 1) }) { Text(c.name) }
+                Tab(currentCriterion == i + 1, { onSelectCriterion(i + 1) }) { Text(c.name, Modifier.padding(5.dp)) }
             }
         }
         Spacer(Modifier.height(5.dp))

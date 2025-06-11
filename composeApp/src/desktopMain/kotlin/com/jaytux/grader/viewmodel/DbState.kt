@@ -502,7 +502,7 @@ class GroupAssignmentState(val assignment: GroupAssignment) {
     private fun Transaction.loadFeedback(): List<Pair<Group, LocalGFeedback>> {
         val allCrit = GroupAssignmentCriterion.find {
             GroupAssignmentCriteria.assignmentId eq assignment.id
-        }//.filter { it.id != assignment.globalCriterion.id }
+        }.orderBy(GroupAssignmentCriteria.name to SortOrder.ASC).filter { it.id != assignment.globalCriterion.id }
 
         return Group.find {
             (Groups.editionId eq assignment.edition.id)
@@ -656,7 +656,7 @@ class SoloAssignmentState(val assignment: SoloAssignment) {
     private fun Transaction.loadFeedback(): List<Pair<Student, FullFeedback>> {3
         val allCrit = SoloAssignmentCriterion.find {
             SoloAssignmentCriteria.assignmentId eq assignment.id
-        }.filter { it.id != assignment.globalCriterion.id }
+        }.orderBy(SoloAssignmentCriteria.name to SortOrder.ASC).filter { it.id != assignment.globalCriterion.id }
 
         return editionCourse.second.soloStudents.sortAsc(Students.name).map { student ->
             val forStudent = (IndividualFeedbacks innerJoin Students).selectAll().where {
