@@ -56,6 +56,7 @@ object GroupAssignments : UUIDTable("grpAssgmts") {
     val name = varchar("name", 50)
     val assignment = text("assignment")
     val deadline = datetime("deadline")
+    val globalCriterion = reference("global_crit", GroupAssignmentCriteria.id)
 }
 
 object GroupAssignmentCriteria : UUIDTable("grpAsCr") {
@@ -70,6 +71,7 @@ object SoloAssignments : UUIDTable("soloAssgmts") {
     val name = varchar("name", 50)
     val assignment = text("assignment")
     val deadline = datetime("deadline")
+    val globalCriterion = reference("global_crit", SoloAssignmentCriteria.id)
 }
 
 object SoloAssignmentCriteria : UUIDTable("soloAsCr") {
@@ -86,7 +88,7 @@ object PeerEvaluations : UUIDTable("peerEvals") {
 
 object GroupFeedbacks : CompositeIdTable("grpFdbks") {
     val assignmentId = reference("group_assignment_id", GroupAssignments.id)
-    val criterionId = reference("criterion_id", GroupAssignmentCriteria.id).nullable()
+    val criterionId = reference("criterion_id", GroupAssignmentCriteria.id)
     val groupId = reference("group_id", Groups.id)
     val feedback = text("feedback")
     val grade = varchar("grade", 32)
@@ -96,7 +98,7 @@ object GroupFeedbacks : CompositeIdTable("grpFdbks") {
 
 object IndividualFeedbacks : CompositeIdTable("indivFdbks") {
     val assignmentId = reference("group_assignment_id", GroupAssignments.id)
-    val criterionId = reference("criterion_id", GroupAssignmentCriteria.id).nullable()
+    val criterionId = reference("criterion_id", GroupAssignmentCriteria.id)
     val groupId = reference("group_id", Groups.id)
     val studentId = reference("student_id", Students.id)
     val feedback = text("feedback")
@@ -107,7 +109,7 @@ object IndividualFeedbacks : CompositeIdTable("indivFdbks") {
 
 object SoloFeedbacks : CompositeIdTable("soloFdbks") {
     val assignmentId = reference("solo_assignment_id", SoloAssignments.id)
-    val criterionId = reference("criterion_id", SoloAssignmentCriteria.id).nullable()
+    val criterionId = reference("criterion_id", SoloAssignmentCriteria.id)
     val studentId = reference("student_id", Students.id)
     val feedback = text("feedback")
     val grade = varchar("grade", 32)

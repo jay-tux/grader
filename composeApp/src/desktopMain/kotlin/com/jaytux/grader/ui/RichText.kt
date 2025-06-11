@@ -28,6 +28,7 @@ import androidx.compose.ui.unit.sp
 import com.jaytux.grader.loadClipboard
 import com.jaytux.grader.toClipboard
 import com.mohamedrejeb.richeditor.model.RichTextState
+import com.mohamedrejeb.richeditor.ui.material.OutlinedRichTextEditor
 
 @Composable
 fun RichTextStyleRow(
@@ -237,4 +238,18 @@ fun RichTextStyleButton(
                 )
         )
     }
+}
+
+@Composable
+fun RichTextField(
+    state: RichTextState,
+    modifier: Modifier = Modifier,
+    buttonsModifier: Modifier = Modifier,
+    outerModifier: Modifier = Modifier,
+    label: @Composable (() -> Unit)? = null
+) = Column(outerModifier) {
+    RichTextStyleRow(buttonsModifier, state)
+    OutlinedRichTextEditor(
+        state = state, modifier = modifier, singleLine = false, minLines = 5, label = label
+    )
 }

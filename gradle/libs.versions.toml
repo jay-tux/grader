@@ -20,6 +20,7 @@ kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-co
 exposed-core = { group = "org.jetbrains.exposed", name = "exposed-core", version.ref = "exposed" }
 exposed-dao = { group = "org.jetbrains.exposed", name = "exposed-dao", version.ref = "exposed" }
 exposed-jdbc = { group = "org.jetbrains.exposed", name = "exposed-jdbc", version.ref = "exposed" }
+exposed-migration = { group = "org.jetbrains.exposed", name = "exposed-migration", version.ref = "exposed" }
 exposed-kotlin-datetime = { group = "org.jetbrains.exposed", name = "exposed-kotlin-datetime", version.ref = "exposed" }
 sqlite = { group = "org.xerial", name = "sqlite-jdbc", version = "3.34.0" }
 sl4j = { group = "org.slf4j", name = "slf4j-simple", version = "2.0.12" }

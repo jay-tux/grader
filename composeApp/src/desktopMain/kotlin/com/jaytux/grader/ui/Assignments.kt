@@ -12,11 +12,9 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.layout
 import androidx.compose.ui.text.font.FontStyle
 import androidx.compose.ui.text.font.FontWeight
-import androidx.compose.ui.text.input.TextFieldValue
 import androidx.compose.ui.text.rememberTextMeasurer
 import androidx.compose.ui.unit.Constraints
 import androidx.compose.ui.unit.dp
-import com.jaytux.grader.data.GroupAssignment
 import com.jaytux.grader.data.GroupAssignmentCriterion
 import com.jaytux.grader.data.SoloAssignmentCriterion
 import com.jaytux.grader.data.Student
@@ -26,7 +24,6 @@ import com.jaytux.grader.viewmodel.SoloAssignmentState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
 import kotlinx.datetime.LocalDateTime
-import org.jetbrains.exposed.sql.transactions.inTopLevelTransaction
 
 @Composable
 fun GroupAssignmentView(state: GroupAssignmentState) {
@@ -126,14 +123,7 @@ fun groupTaskWidget(
                     Row {
                         DateTimePicker(deadline, onSetDeadline)
                     }
-                    RichTextStyleRow(state = updTask)
-                    OutlinedRichTextEditor(
-                        state = updTask,
-                        modifier = Modifier.fillMaxWidth().weight(1f),
-                        singleLine = false,
-                        minLines = 5,
-                        label = { Text("Task") }
-                    )
+                    RichTextField(updTask, Modifier.fillMaxWidth().weight(1f)) { Text("Task") }
                     CancelSaveRow(
                         true,
                         { updTask.setMarkdown(taskMD) },
@@ -188,7 +178,7 @@ fun groupTaskWidget(
 @Composable
 fun groupFeedback(state: GroupAssignmentState, fdbk: GroupAssignmentState.LocalGFeedback) {
     val (group, feedback, individual) = fdbk
-    var idx by remember(fdbk) { mutableStateOf(0) }
+    var studentIdx by remember(fdbk) { mutableStateOf(0) }
     var critIdx by remember(fdbk) { mutableStateOf(0) }
     val criteria by state.criteria.entities
     val suggestions by state.autofill.entities
@@ -198,8 +188,8 @@ fun groupFeedback(state: GroupAssignmentState, fdbk: GroupAssignmentState.LocalG
             LazyColumn(Modifier.fillMaxHeight().padding(10.dp)) {
                 item {
                     Surface(
-                        Modifier.fillMaxWidth().clickable { idx = 0 },
-                        tonalElevation = if (idx == 0) 50.dp else 0.dp,
+                        Modifier.fillMaxWidth().clickable { studentIdx = 0 },
+                        tonalElevation = if (studentIdx == 0) 50.dp else 0.dp,
                         shape = MaterialTheme.shapes.medium
                     ) {
                         Text("Group feedback", Modifier.padding(5.dp), fontStyle = FontStyle.Italic)
@@ -209,8 +199,8 @@ fun groupFeedback(state: GroupAssignmentState, fdbk: GroupAssignmentState.LocalG
                 itemsIndexed(individual.toList()) { i, (student, details) ->
                     val (role, _) = details
                     Surface(
-                        Modifier.fillMaxWidth().clickable { idx = i + 1 },
-                        tonalElevation = if (idx == i + 1) 50.dp else 0.dp,
+                        Modifier.fillMaxWidth().clickable { studentIdx = i + 1 },
+                        tonalElevation = if (studentIdx == i + 1) 50.dp else 0.dp,
                         shape = MaterialTheme.shapes.medium
                     ) {
                         Text("${student.name} (${role ?: "no role"})", Modifier.padding(5.dp))
@@ -219,45 +209,25 @@ fun groupFeedback(state: GroupAssignmentState, fdbk: GroupAssignmentState.LocalG
             }
         }
 
-        val updateGrade = { grade: String ->
-            if(idx == 0) {
-                state.upsertGroupFeedback(group, feedback.global?.feedback ?: "", grade)
-            }
-            else {
-                val ind = individual[idx - 1]
-                val glob = ind.second.second.global
-                state.upsertIndividualFeedback(ind.first, group, glob?.feedback ?: "", grade)
-            }
-        }
-
-        val updateFeedback = { fdbk: String ->
-            if(idx == 0) {
-                if(critIdx == 0) {
-                    state.upsertGroupFeedback(group, fdbk, feedback.global?.grade ?: "", null)
-                }
-                else {
-                    val current = feedback.byCriterion[critIdx - 1]
-                    state.upsertGroupFeedback(group, fdbk, current.entry?.grade ?: "", current.criterion)
-                }
-            }
-            else {
-                val ind = individual[idx - 1]
-                if(critIdx == 0) {
-                    val entry = ind.second.second
-                    state.upsertIndividualFeedback(ind.first, group, fdbk, entry.global?.grade ?: "", null)
-                }
-                else {
-                    val entry = ind.second.second.byCriterion[critIdx - 1]
-                    state.upsertIndividualFeedback(ind.first, group, fdbk, entry.entry?.grade ?: "", entry.criterion)
-                }
+        val onSave = { grade: String, fdbk: String ->
+            when {
+                studentIdx == 0 && critIdx == 0 -> state.upsertGroupFeedback(group, fdbk, grade)
+                studentIdx == 0 && critIdx != 0 -> state.upsertGroupFeedback(group, fdbk, grade, criteria[critIdx - 1])
+                studentIdx != 0 && critIdx == 0 -> state.upsertIndividualFeedback(individual[studentIdx - 1].first, group, fdbk, grade)
+                else                            -> state.upsertIndividualFeedback(individual[studentIdx - 1].first, group, fdbk, grade, criteria[critIdx - 1])
             }
         }
 
         groupFeedbackPane(
-            criteria, critIdx, { critIdx = it }, feedback.global,
-            if(critIdx == 0) feedback.global else feedback.byCriterion[critIdx - 1].entry,
-            suggestions, updateGrade, updateFeedback, Modifier.weight(0.75f).padding(10.dp),
-            key = idx to critIdx
+            criteria, critIdx, { critIdx = it },
+            when {
+                studentIdx == 0 && critIdx == 0 -> feedback.global
+                studentIdx == 0 && critIdx != 0 -> feedback.byCriterion[critIdx - 1].entry
+                studentIdx != 0 && critIdx == 0 -> individual[studentIdx - 1].second.second.global
+                else                            -> individual[studentIdx - 1].second.second.byCriterion[critIdx - 1].entry
+            },
+            suggestions, onSave, Modifier.weight(0.75f).padding(10.dp),
+            key = studentIdx to critIdx
         )
     }
 }
@@ -267,25 +237,27 @@ fun groupFeedbackPane(
     criteria: List<GroupAssignmentCriterion>,
     currentCriterion: Int,
     onSelectCriterion: (Int) -> Unit,
-    globFeedback: GroupAssignmentState.FeedbackEntry?,
-    criterionFeedback: GroupAssignmentState.FeedbackEntry?,
+    rawFeedback: GroupAssignmentState.FeedbackEntry?,
     autofill: List<String>,
-    onSetGrade: (String) -> Unit,
-    onSetFeedback: (String) -> Unit,
+    onSave: (String, String) -> Unit,
     modifier: Modifier = Modifier,
     key: Any? = null
 ) {
-    var grade by remember(globFeedback, key) { mutableStateOf(globFeedback?.grade ?: "") }
-    var feedback by remember(currentCriterion, criteria, criterionFeedback, key) { mutableStateOf(TextFieldValue(criterionFeedback?.feedback ?: "")) }
+    var grade by remember(rawFeedback, key) { mutableStateOf(rawFeedback?.grade ?: "") }
+    val feedback = rememberRichTextState()
+
+    LaunchedEffect(currentCriterion, criteria, rawFeedback, key) {
+        feedback.setMarkdown(rawFeedback?.feedback ?: "")
+    }
+
     Column(modifier) {
         Row {
             Text("Overall grade: ", Modifier.align(Alignment.CenterVertically))
             OutlinedTextField(grade, { grade = it }, Modifier.weight(0.2f))
             Spacer(Modifier.weight(0.6f))
             Button(
-                { onSetGrade(grade); onSetFeedback(feedback.text) },
-                Modifier.weight(0.2f).align(Alignment.CenterVertically),
-                enabled = grade.isNotBlank() || feedback.text.isNotBlank()
+                { onSave(grade, feedback.toMarkdown()) },
+                Modifier.weight(0.2f).align(Alignment.CenterVertically)
             ) {
                 Text("Save")
             }
@@ -297,11 +269,7 @@ fun groupFeedbackPane(
             }
         }
         Spacer(Modifier.height(5.dp))
-        AutocompleteLineField(
-            feedback, { feedback = it }, Modifier.fillMaxWidth().weight(1f), { Text("Feedback") }
-        ) { filter ->
-            autofill.filter { x -> x.trim().startsWith(filter.trim()) }
-        }
+        RichTextField(feedback, Modifier.fillMaxWidth().weight(1f)) { Text("Feedback") }
     }
 }
 
@@ -480,16 +448,19 @@ fun soloFeedbackPane(
     key: Any? = null
 ) {
     var grade by remember(globFeedback, key) { mutableStateOf(globFeedback?.grade ?: "") }
-    var feedback by remember(currentCriterion, criteria, key) { mutableStateOf(TextFieldValue(criterionFeedback?.feedback ?: "")) }
+    val feedback = rememberRichTextState()
+
+    LaunchedEffect(currentCriterion, criteria, criterionFeedback, key) {
+        feedback.setMarkdown(criterionFeedback?.feedback ?: "")
+    }
     Column(modifier) {
         Row {
             Text("Overall grade: ", Modifier.align(Alignment.CenterVertically))
             OutlinedTextField(grade, { grade = it }, Modifier.weight(0.2f))
             Spacer(Modifier.weight(0.6f))
             Button(
-                { onSetGrade(grade); onSetFeedback(feedback.text) },
-                Modifier.weight(0.2f).align(Alignment.CenterVertically),
-                enabled = grade.isNotBlank() || feedback.text.isNotBlank()
+                { onSetGrade(grade); onSetFeedback(feedback.toMarkdown()) },
+                Modifier.weight(0.2f).align(Alignment.CenterVertically)
             ) {
                 Text("Save")
             }
@@ -501,11 +472,7 @@ fun soloFeedbackPane(
             }
         }
         Spacer(Modifier.height(5.dp))
-        AutocompleteLineField(
-            feedback, { feedback = it }, Modifier.fillMaxWidth().weight(1f), { Text("Feedback") }
-        ) { filter ->
-            autofill.filter { x -> x.trim().startsWith(filter.trim()) }
-        }
+        RichTextField(feedback, Modifier.fillMaxWidth().weight(1f)) { Text("Feedback") }
     }
 }
 
