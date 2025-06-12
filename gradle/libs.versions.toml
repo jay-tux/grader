@@ -1,6 +1,6 @@
 [versions]
 androidx-lifecycle = "2.8.4"
-compose-multiplatform = "1.7.0"
+compose-multiplatform = "1.8.1"
 junit = "4.13.2"
 kotlin = "2.1.0"
 kotlinx-coroutines = "1.10.1"
@@ -9,6 +9,7 @@ material3 = "1.7.3"
 ui-android = "1.7.8"
 foundation-layout-android = "1.7.8"
 rtf = "1.0.0-rc11"
+filekit = "0.10.0-beta04"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
@@ -30,6 +31,10 @@ material-icons = { group = "org.jetbrains.compose.material", name = "material-ic
 androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "ui-android" }
 androidx-foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundation-layout-android" }
 rtfield = { group = "com.mohamedrejeb.richeditor", name = "richeditor-compose", version.ref = "rtf" }
+filekit-core = { group = "io.github.vinceglb", name = "filekit-core", version.ref = "filekit" }
+filekit-dialogs = { group = "io.github.vinceglb", name = "filekit-dialogs", version.ref = "filekit" }
+filekit-dialogs-compose = { group = "io.github.vinceglb", name = "filekit-dialogs-compose", version.ref = "filekit" }
+filekit-coil = { group = "io.github.vinceglb", name = "filekit-coil", version.ref = "filekit" }
 
 [plugins]
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }

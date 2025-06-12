@@ -36,6 +36,10 @@ kotlin {
             implementation(libs.sqlite)
             implementation(libs.material3.desktop)
             implementation(libs.rtfield)
+            implementation(libs.filekit.core)
+            implementation(libs.filekit.dialogs)
+            implementation(libs.filekit.dialogs.compose)
+            implementation(libs.filekit.coil)
         }
     }
 }
@@ -50,6 +54,10 @@ compose.desktop {
             packageName = "com.jaytux.grader"
             packageVersion = "1.0.0"
             includeAllModules = true
+
+            linux {
+                modules("jdk.security.auth")
+            }
         }
     }
 }

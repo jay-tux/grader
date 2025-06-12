@@ -243,8 +243,8 @@ fun RichTextStyleButton(
 @Composable
 fun RichTextField(
     state: RichTextState,
-    modifier: Modifier = Modifier,
-    buttonsModifier: Modifier = Modifier,
+    modifier: Modifier = Modifier.fillMaxSize(),
+    buttonsModifier: Modifier = Modifier.fillMaxWidth(),
     outerModifier: Modifier = Modifier,
     label: @Composable (() -> Unit)? = null
 ) = Column(outerModifier) {

@@ -18,11 +18,15 @@ import androidx.compose.ui.unit.dp
 import com.jaytux.grader.data.GroupAssignmentCriterion
 import com.jaytux.grader.data.SoloAssignmentCriterion
 import com.jaytux.grader.data.Student
+import com.jaytux.grader.data.exportTo
+import com.jaytux.grader.maxN
 import com.jaytux.grader.viewmodel.GroupAssignmentState
 import com.jaytux.grader.viewmodel.PeerEvaluationState
 import com.jaytux.grader.viewmodel.SoloAssignmentState
 import com.mohamedrejeb.richeditor.model.rememberRichTextState
 import com.mohamedrejeb.richeditor.ui.material3.OutlinedRichTextEditor
+import io.github.vinceglb.filekit.dialogs.compose.rememberFileSaverLauncher
+import kotlinx.coroutines.launch
 import kotlinx.datetime.LocalDateTime
 
 @Composable
@@ -182,53 +186,102 @@ fun groupFeedback(state: GroupAssignmentState, fdbk: GroupAssignmentState.LocalG
     var critIdx by remember(fdbk) { mutableStateOf(0) }
     val criteria by state.criteria.entities
     val suggestions by state.autofill.entities
+    val exporting by remember { mutableStateOf(false) }
+
+    val onSave = { grade: String, fdbk: String ->
+        when {
+            studentIdx == 0 && critIdx == 0 -> state.upsertGroupFeedback(group, fdbk, grade)
+            studentIdx == 0 && critIdx != 0 -> state.upsertGroupFeedback(group, fdbk, grade, criteria[critIdx - 1])
+            studentIdx != 0 && critIdx == 0 -> state.upsertIndividualFeedback(individual[studentIdx - 1].first, group, fdbk, grade)
+            else -> state.upsertIndividualFeedback(individual[studentIdx - 1].first, group, fdbk, grade, criteria[critIdx - 1])
+        }
+    }
+
+    val scope = rememberCoroutineScope()
+    val exporter = rememberFileSaverLauncher { file ->
+        file?.let {
+            scope.launch { fdbk.exportTo(it, state.assignment) }
+        }
+    }
+
+    val critGrade: (Int) -> String? = { crit: Int ->
+        when {
+            studentIdx == 0 && crit == 0 -> feedback.global?.grade?.ifBlank { null }
+            studentIdx == 0 && crit != 0 -> feedback.byCriterion[crit - 1].entry?.grade?.ifBlank { null }
+            studentIdx != 0 && crit == 0 -> individual[studentIdx - 1].second.second.global?.grade?.ifBlank { null }
+            else -> individual[studentIdx - 1].second.second.byCriterion[crit - 1].entry?.grade?.ifBlank { null }
+        }.also { println("Mapping criterion #${crit} to grade ${it}") }
+    }
 
     Row {
         Surface(Modifier.weight(0.25f), tonalElevation = 10.dp) {
-            LazyColumn(Modifier.fillMaxHeight().padding(10.dp)) {
-                item {
-                    Surface(
-                        Modifier.fillMaxWidth().clickable { studentIdx = 0 },
-                        tonalElevation = if (studentIdx == 0) 50.dp else 0.dp,
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Text("Group feedback", Modifier.padding(5.dp), fontStyle = FontStyle.Italic)
+            Column(Modifier.padding(10.dp)) {
+                LazyColumn(Modifier.weight(1f)) {
+                    item {
+                        Surface(
+                            Modifier.fillMaxWidth().clickable { studentIdx = 0 },
+                            tonalElevation = if (studentIdx == 0) 50.dp else 0.dp,
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Text("Group feedback", Modifier.padding(5.dp), fontStyle = FontStyle.Italic)
+                        }
+                    }
+
+                    itemsIndexed(individual.toList()) { i, (student, details) ->
+                        val (role, _) = details
+                        Surface(
+                            Modifier.fillMaxWidth().clickable { studentIdx = i + 1 },
+                            tonalElevation = if (studentIdx == i + 1) 50.dp else 0.dp,
+                            shape = MaterialTheme.shapes.medium
+                        ) {
+                            Text("${student.name} (${role ?: "no role"})", Modifier.padding(5.dp))
+                        }
                     }
                 }
 
-                itemsIndexed(individual.toList()) { i, (student, details) ->
-                    val (role, _) = details
-                    Surface(
-                        Modifier.fillMaxWidth().clickable { studentIdx = i + 1 },
-                        tonalElevation = if (studentIdx == i + 1) 50.dp else 0.dp,
-                        shape = MaterialTheme.shapes.medium
-                    ) {
-                        Text("${student.name} (${role ?: "no role"})", Modifier.padding(5.dp))
-                    }
+                Button(
+                    { exporter.launch("${state.assignment.name} (${fdbk.group.name})", "md") },
+                    Modifier.align(Alignment.CenterHorizontally).fillMaxWidth()
+                ) {
+                    Text("Export group feedback")
                 }
             }
         }
 
-        val onSave = { grade: String, fdbk: String ->
-            when {
-                studentIdx == 0 && critIdx == 0 -> state.upsertGroupFeedback(group, fdbk, grade)
-                studentIdx == 0 && critIdx != 0 -> state.upsertGroupFeedback(group, fdbk, grade, criteria[critIdx - 1])
-                studentIdx != 0 && critIdx == 0 -> state.upsertIndividualFeedback(individual[studentIdx - 1].first, group, fdbk, grade)
-                else                            -> state.upsertIndividualFeedback(individual[studentIdx - 1].first, group, fdbk, grade, criteria[critIdx - 1])
+        Column(Modifier.weight(0.75f).padding(10.dp)) {
+            TabRow(critIdx) {
+                Tab(critIdx == 0, { critIdx = 0 }) {
+                    Text(
+                        "General feedback",
+                        Modifier.padding(5.dp),
+                        fontStyle = FontStyle.Italic
+                    )
+                }
+                criteria.forEachIndexed { i, c ->
+                    Tab(critIdx == i + 1, { critIdx = i + 1 }) {
+                        Text(
+                            c.name,
+                            Modifier.padding(5.dp)
+                        )
+                    }
+                }
             }
-        }
 
-        groupFeedbackPane(
-            criteria, critIdx, { critIdx = it },
-            when {
-                studentIdx == 0 && critIdx == 0 -> feedback.global
-                studentIdx == 0 && critIdx != 0 -> feedback.byCriterion[critIdx - 1].entry
-                studentIdx != 0 && critIdx == 0 -> individual[studentIdx - 1].second.second.global
-                else                            -> individual[studentIdx - 1].second.second.byCriterion[critIdx - 1].entry
-            },
-            suggestions, onSave, Modifier.weight(0.75f).padding(10.dp),
-            key = studentIdx to critIdx
-        )
+            Spacer(Modifier.height(5.dp))
+
+            groupFeedbackPane(
+                criteria, critIdx, { critIdx = it },
+                when {
+                    studentIdx == 0 && critIdx == 0 -> feedback.global
+                    studentIdx == 0 && critIdx != 0 -> feedback.byCriterion[critIdx - 1].entry
+                    studentIdx != 0 && critIdx == 0 -> individual[studentIdx - 1].second.second.global
+                    else -> individual[studentIdx - 1].second.second.byCriterion[critIdx - 1].entry
+                },
+                suggestions, onSave,
+                if(critIdx == 0 && criteria.isNotEmpty()) criteria.mapIndexed { idx, it -> it.name to critGrade(idx + 1) } else null,
+                key = studentIdx to critIdx
+            )
+        }
     }
 }
 
@@ -240,6 +293,7 @@ fun groupFeedbackPane(
     rawFeedback: GroupAssignmentState.FeedbackEntry?,
     autofill: List<String>,
     onSave: (String, String) -> Unit,
+    critGrades: List<Pair<String, String?>>? = null,
     modifier: Modifier = Modifier,
     key: Any? = null
 ) {
@@ -252,7 +306,7 @@ fun groupFeedbackPane(
 
     Column(modifier) {
         Row {
-            Text("Overall grade: ", Modifier.align(Alignment.CenterVertically))
+            Text("Grade: ", Modifier.align(Alignment.CenterVertically))
             OutlinedTextField(grade, { grade = it }, Modifier.weight(0.2f))
             Spacer(Modifier.weight(0.6f))
             Button(
@@ -262,14 +316,29 @@ fun groupFeedbackPane(
                 Text("Save")
             }
         }
-        TabRow(currentCriterion) {
-            Tab(currentCriterion == 0, { onSelectCriterion(0) }) { Text("General feedback", Modifier.padding(5.dp), fontStyle = FontStyle.Italic) }
-            criteria.forEachIndexed { i, c ->
-                Tab(currentCriterion == i + 1, { onSelectCriterion(i + 1) }) { Text(c.name, Modifier.padding(5.dp)) }
+        Spacer(Modifier.height(5.dp))
+        Row {
+            RichTextField(feedback, outerModifier = Modifier.weight(0.7f).fillMaxHeight()) { Text("Feedback") }
+            critGrades?.let { grades ->
+                Spacer(Modifier.width(10.dp))
+                LazyColumn(Modifier.weight(0.3f)) {
+                    item {
+                        Text("Criteria grades", Modifier.padding(5.dp), style = MaterialTheme.typography.headlineMedium)
+                    }
+                    items(grades) { (crit, grade) ->
+                        Column {
+                            Text(crit, Modifier.padding(5.dp), fontWeight = FontWeight.Bold)
+                            Row {
+                                Spacer(Modifier.width(5.dp))
+                                if(grade == null) Text("(no grade yet)", Modifier.padding(5.dp), fontStyle = FontStyle.Italic)
+                                else Text(grade, Modifier.padding(5.dp))
+                            }
+                            Spacer(Modifier.width(10.dp))
+                        }
+                    }
+                }
             }
         }
-        Spacer(Modifier.height(5.dp))
-        RichTextField(feedback, Modifier.fillMaxWidth().weight(1f)) { Text("Feedback") }
     }
 }
 
