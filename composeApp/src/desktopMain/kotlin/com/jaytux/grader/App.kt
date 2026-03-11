@@ -1,43 +1,37 @@
 package com.jaytux.grader
 
-import androidx.compose.foundation.layout.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
-import androidx.compose.ui.Alignment
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.unit.dp
-import com.jaytux.grader.ui.ChevronLeft
-import com.jaytux.grader.ui.CoursesView
-import com.jaytux.grader.ui.toDp
-import com.jaytux.grader.viewmodel.CourseListState
-import org.jetbrains.compose.ui.tooling.preview.Preview
+import com.jaytux.grader.data.v2.BaseAssignment
+import com.jaytux.grader.data.v2.Course
+import com.jaytux.grader.data.v2.Edition
+import com.jaytux.grader.ui.EditionTitle
+import com.jaytux.grader.ui.EditionView
+import com.jaytux.grader.ui.GroupsGradingTitle
+import com.jaytux.grader.ui.GroupsGradingView
+import com.jaytux.grader.ui.HomeTitle
+import com.jaytux.grader.ui.HomeView
+import com.jaytux.grader.ui.PeerEvalsGradingTitle
+import com.jaytux.grader.ui.PeerEvalsGradingView
+import com.jaytux.grader.ui.SolosGradingTitle
+import com.jaytux.grader.ui.SolosGradingView
+import com.jaytux.grader.viewmodel.Navigator
 
-data class UiRoute(val heading: String, val content: @Composable (push: (UiRoute) -> Unit) -> Unit)
+object Home : Navigator.IDestination
+data class EditionDetail(val ed: Edition, val course: Course) : Navigator.IDestination
+data class GroupGrading(val course: Course, val edition: Edition, val assignment: BaseAssignment) : Navigator.IDestination
+data class SoloGrading(val course: Course, val edition: Edition, val assignment: BaseAssignment) : Navigator.IDestination
+data class PeerEvalGrading(val course: Course, val edition: Edition, val assignment: BaseAssignment) : Navigator.IDestination
 
 @Composable
-@Preview
 fun App() {
     MaterialTheme {
-        val courseList = CourseListState()
-        var stack by remember {
-            val start = UiRoute("Courses Overview") { CoursesView(courseList, it) }
-            mutableStateOf(listOf(start))
-        }
-
-        Column {
-            Surface(Modifier.fillMaxWidth(), color = MaterialTheme.colorScheme.primary, tonalElevation = 10.dp, shadowElevation = 10.dp) {
-                Row(Modifier.padding(10.dp)) {
-                    IconButton({ stack = stack.toMutableList().also { it.removeLast() } }, enabled = stack.size >= 2) {
-                        Icon(ChevronLeft, "Back", Modifier.size(MaterialTheme.typography.headlineLarge.fontSize.toDp()))
-                    }
-                    Text(stack.last().heading, Modifier.align(Alignment.CenterVertically), style = MaterialTheme.typography.headlineLarge)
-                }
-            }
-            Surface(Modifier.fillMaxSize()) {
-                Box {
-                    stack.last().content { stack += (it) }
-                }
-            }
+        Navigator.NavHost(Home) {
+            composable<Home>({ HomeTitle() }) { _, token -> HomeView(token) }
+            composable<EditionDetail>({ EditionTitle(it) }) { data, token -> EditionView(data, token) }
+            composable<GroupGrading>({ GroupsGradingTitle(it) }) { data, token -> GroupsGradingView(data, token) }
+            composable<SoloGrading>({ SolosGradingTitle(it) }) { data, token -> SolosGradingView(data, token) }
+            composable<PeerEvalGrading>({ PeerEvalsGradingTitle(it) }) { data, token -> PeerEvalsGradingView(data, token) }
         }
     }
 }

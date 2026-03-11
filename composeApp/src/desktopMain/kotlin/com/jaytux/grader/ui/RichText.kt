@@ -4,12 +4,6 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.shape.CircleShape
-import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.outlined.FormatListBulleted
-import androidx.compose.material.icons.filled.Circle
-import androidx.compose.material.icons.filled.ContentCopy
-import androidx.compose.material.icons.filled.ContentPaste
-import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.rememberCoroutineScope
@@ -18,6 +12,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.focus.focusProperties
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.platform.LocalClipboard
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.font.FontStyle
@@ -29,13 +24,14 @@ import com.jaytux.grader.loadClipboard
 import com.jaytux.grader.toClipboard
 import com.mohamedrejeb.richeditor.model.RichTextState
 import com.mohamedrejeb.richeditor.ui.material.OutlinedRichTextEditor
+import kotlinx.coroutines.launch
 
 @Composable
 fun RichTextStyleRow(
     modifier: Modifier = Modifier,
     state: RichTextState,
 ) {
-    val clip = LocalClipboardManager.current
+    val clip = LocalClipboardManager.current // I know this is deprecated, but I won't figure out the Clipboard API now
     val scope = rememberCoroutineScope()
 
     Row(modifier.fillMaxWidth()) {
@@ -53,7 +49,7 @@ fun RichTextStyleRow(
                         )
                     },
                     isSelected = state.currentSpanStyle.fontWeight == FontWeight.Bold,
-                    icon = Icons.Outlined.FormatBold
+                    icon = FormatBold
                 )
             }
 
@@ -67,7 +63,7 @@ fun RichTextStyleRow(
                         )
                     },
                     isSelected = state.currentSpanStyle.fontStyle == FontStyle.Italic,
-                    icon = Icons.Outlined.FormatItalic
+                    icon = FormatItalic
                 )
             }
 
@@ -81,7 +77,7 @@ fun RichTextStyleRow(
                         )
                     },
                     isSelected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.Underline) == true,
-                    icon = Icons.Outlined.FormatUnderlined
+                    icon = FormatUnderline
                 )
             }
 
@@ -95,7 +91,7 @@ fun RichTextStyleRow(
                         )
                     },
                     isSelected = state.currentSpanStyle.textDecoration?.contains(TextDecoration.LineThrough) == true,
-                    icon = Icons.Outlined.FormatStrikethrough
+                    icon = FormatStrikethrough
                 )
             }
 
@@ -109,7 +105,7 @@ fun RichTextStyleRow(
                         )
                     },
                     isSelected = state.currentSpanStyle.fontSize == 28.sp,
-                    icon = Icons.Outlined.FormatSize
+                    icon = FormatSize
                 )
             }
 
@@ -123,7 +119,7 @@ fun RichTextStyleRow(
                         )
                     },
                     isSelected = state.currentSpanStyle.color == Color.Red,
-                    icon = Icons.Filled.Circle,
+                    icon = CircleFilled,
                     tint = Color.Red
                 )
             }
@@ -138,7 +134,7 @@ fun RichTextStyleRow(
                         )
                     },
                     isSelected = state.currentSpanStyle.background == Color.Yellow,
-                    icon = Icons.Outlined.Circle,
+                    icon = CircleOutline,
                     tint = Color.Yellow
                 )
             }
@@ -158,7 +154,7 @@ fun RichTextStyleRow(
                         state.toggleUnorderedList()
                     },
                     isSelected = state.isUnorderedList,
-                    icon = Icons.AutoMirrored.Outlined.FormatListBulleted,
+                    icon = FormatListBullet,
                 )
             }
 
@@ -168,7 +164,7 @@ fun RichTextStyleRow(
                         state.toggleOrderedList()
                     },
                     isSelected = state.isOrderedList,
-                    icon = Icons.Outlined.FormatListNumbered,
+                    icon = FormatListNumber,
                 )
             }
 
@@ -187,16 +183,16 @@ fun RichTextStyleRow(
                         state.toggleCodeSpan()
                     },
                     isSelected = state.isCodeSpan,
-                    icon = Icons.Outlined.Code,
+                    icon = FormatCode,
                 )
             }
         }
 
-        IconButton({ state.toClipboard(clip) }) {
-            Icon(Icons.Default.ContentCopy, contentDescription = "Copy markdown")
+        IconButton({ scope.launch { state.toClipboard(clip) } }) {
+            Icon(ContentCopy, contentDescription = "Copy markdown")
         }
-        IconButton({ state.loadClipboard(clip, scope) }) {
-            Icon(Icons.Default.ContentPaste, contentDescription = "Paste markdown")
+        IconButton({ scope.launch { state.loadClipboard(clip, scope) } }) {
+            Icon(ContentPaste, contentDescription = "Paste markdown")
         }
     }
 }

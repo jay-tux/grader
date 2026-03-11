@@ -1,33 +1,38 @@
 [versions]
-androidx-lifecycle = "2.8.4"
-compose-multiplatform = "1.8.1"
+androidx-lifecycle = "2.9.6"
+compose-multiplatform = "1.9.0"
 junit = "4.13.2"
-kotlin = "2.1.0"
+kotlin = "2.3.0"
 kotlinx-coroutines = "1.10.1"
-exposed = "0.59.0"
-material3 = "1.7.3"
+exposed = "1.1.1"
+material3 = "1.9.0"
 ui-android = "1.7.8"
 foundation-layout-android = "1.7.8"
 rtf = "1.0.0-rc11"
 filekit = "0.10.0-beta04"
+directories = "26"
+androidx-activity-compose = "1.12.2"
 
 [libraries]
 kotlin-test = { module = "org.jetbrains.kotlin:kotlin-test", version.ref = "kotlin" }
 kotlin-test-junit = { module = "org.jetbrains.kotlin:kotlin-test-junit", version.ref = "kotlin" }
 junit = { group = "junit", name = "junit", version.ref = "junit" }
 androidx-lifecycle-viewmodel = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel", version.ref = "androidx-lifecycle" }
+androidx-lifecycle-viewmodel-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-viewmodel-compose", version.ref = "androidx-lifecycle" }
+androidx-activity-compose = { module = "androidx.activity:activity-compose", version.ref = "androidx-activity-compose" }
+compose-backhandler = { module = "org.jetbrains.compose.ui:ui-backhandler", version.ref = "compose-multiplatform" }
 androidx-lifecycle-runtime-compose = { group = "org.jetbrains.androidx.lifecycle", name = "lifecycle-runtime-compose", version.ref = "androidx-lifecycle" }
 kotlinx-coroutines-swing = { group = "org.jetbrains.kotlinx", name = "kotlinx-coroutines-swing", version.ref = "kotlinx-coroutines" }
 exposed-core = { group = "org.jetbrains.exposed", name = "exposed-core", version.ref = "exposed" }
 exposed-dao = { group = "org.jetbrains.exposed", name = "exposed-dao", version.ref = "exposed" }
 exposed-jdbc = { group = "org.jetbrains.exposed", name = "exposed-jdbc", version.ref = "exposed" }
-exposed-migration = { group = "org.jetbrains.exposed", name = "exposed-migration", version.ref = "exposed" }
+exposed-migration = { group = "org.jetbrains.exposed", name = "exposed-migration-core", version.ref = "exposed" }
+exposed-migration-jdbc = { group = "org.jetbrains.exposed", name = "exposed-migration-jdbc", version.ref = "exposed" }
 exposed-kotlin-datetime = { group = "org.jetbrains.exposed", name = "exposed-kotlin-datetime", version.ref = "exposed" }
 sqlite = { group = "org.xerial", name = "sqlite-jdbc", version = "3.34.0" }
 sl4j = { group = "org.slf4j", name = "slf4j-simple", version = "2.0.12" }
 material3-core = { group = "org.jetbrains.compose.material3", name = "material3", version.ref = "material3" }
 material3-desktop = { group = "org.jetbrains.compose.material3", name = "material3-desktop", version.ref = "material3" }
-material-icons = { group = "org.jetbrains.compose.material", name = "material-icons-extended", version.ref = "material3" }
 androidx-ui-android = { group = "androidx.compose.ui", name = "ui-android", version.ref = "ui-android" }
 androidx-foundation-layout-android = { group = "androidx.compose.foundation", name = "foundation-layout-android", version.ref = "foundation-layout-android" }
 rtfield = { group = "com.mohamedrejeb.richeditor", name = "richeditor-compose", version.ref = "rtf" }
@@ -35,6 +40,7 @@ filekit-core = { group = "io.github.vinceglb", name = "filekit-core", version.re
 filekit-dialogs = { group = "io.github.vinceglb", name = "filekit-dialogs", version.ref = "filekit" }
 filekit-dialogs-compose = { group = "io.github.vinceglb", name = "filekit-dialogs-compose", version.ref = "filekit" }
 filekit-coil = { group = "io.github.vinceglb", name = "filekit-coil", version.ref = "filekit" }
+directories = { group = "dev.dirs", name = "directories", version.ref = "directories" }
 
 [plugins]
 composeMultiplatform = { id = "org.jetbrains.compose", version.ref = "compose-multiplatform" }

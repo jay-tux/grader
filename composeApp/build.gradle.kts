@@ -7,12 +7,17 @@ plugins {
 }
 
 kotlin {
-    jvm("desktop")
+    compilerOptions {
+        freeCompilerArgs.add("-Xcontext-parameters")
+    }
+
+    jvm("desktop") {}
     
     sourceSets {
         val desktopMain by getting
-        
-        commonMain.dependencies {
+
+        desktopMain.dependencies {
+            implementation(compose.desktop.currentOs)
             implementation(compose.runtime)
             implementation(compose.foundation)
             implementation(compose.material)
@@ -22,16 +27,13 @@ kotlin {
             implementation(libs.androidx.lifecycle.viewmodel)
             implementation(libs.androidx.lifecycle.runtime.compose)
             implementation(libs.material3.core)
-            implementation(libs.material.icons)
             implementation(libs.sl4j)
-        }
-        desktopMain.dependencies {
-            implementation(compose.desktop.currentOs)
             implementation(libs.kotlinx.coroutines.swing)
             implementation(libs.exposed.core)
             implementation(libs.exposed.jdbc)
             implementation(libs.exposed.dao)
             implementation(libs.exposed.migration)
+            implementation(libs.exposed.migration.jdbc)
             implementation(libs.exposed.kotlin.datetime)
             implementation(libs.sqlite)
             implementation(libs.material3.desktop)
@@ -40,6 +42,9 @@ kotlin {
             implementation(libs.filekit.dialogs)
             implementation(libs.filekit.dialogs.compose)
             implementation(libs.filekit.coil)
+            implementation(libs.directories)
+            implementation(libs.androidx.lifecycle.viewmodel.compose)
+            implementation(libs.compose.backhandler)
         }
     }
 }
@@ -52,6 +57,7 @@ compose.desktop {
         nativeDistributions {
             targetFormats(TargetFormat.Dmg, TargetFormat.Msi, TargetFormat.Deb)
             packageName = "com.jaytux.grader"
+            mainClass = "com.jaytux.grader.MainKt"
             packageVersion = "1.0.0"
             includeAllModules = true
 
